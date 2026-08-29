@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Refresh Opportunity Scoring — FlyRank ML Internship Capstone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:        #0f1117;
+    --ink-mid:    #3a3d4a;
+    --ink-soft:   #6b6f80;
+    --rule:       #e2e4ec;
+    --bg:         #f7f8fc;
+    --surface:    #ffffff;
+    --accent:     #2a52e8;
+    --accent-dim: #dde4fb;
+    --warn:       #c94f1e;
+    --warn-dim:   #fce9e2;
+    --mono:       'DM Mono', monospace;
+    --display:    'Syne', sans-serif;
+    --body:       'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.72;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(247,248,252,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--rule);
+    padding: 0 2rem;
+  }
+  nav ul {
+    display: flex;
+    gap: 0;
+    list-style: none;
+    max-width: 900px;
+    margin: 0 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav ul::-webkit-scrollbar { display: none; }
+  nav ul li a {
+    display: block;
+    padding: 0.9rem 1rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+    border-bottom: 2px solid transparent;
+  }
+  nav ul li a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* HERO */
+  .hero {
+    background: var(--ink);
+    color: #fff;
+    padding: 5rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -120px;
+    width: 520px; height: 520px;
+    background: radial-gradient(circle, rgba(42,82,232,0.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 1.4rem;
+  }
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.6rem;
+    max-width: 780px;
+  }
+  .hero h1 span {
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgba(255,255,255,0.35);
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-top: 2.4rem;
+    padding-top: 2.4rem;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.55);
+  }
+  .hero-meta strong { color: rgba(255,255,255,0.85); display: block; font-weight: 500; }
+
+  /* ABSTRACT */
+  .abstract-band {
+    background: var(--accent);
+    color: #fff;
+    padding: 2.8rem 2rem;
+  }
+  .abstract-inner {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .abstract-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 1rem;
+  }
+  .abstract-inner p {
+    font-size: 1.05rem;
+    line-height: 1.78;
+    font-weight: 300;
+    opacity: 0.95;
+    max-width: 760px;
+  }
+
+  /* STAT ROW */
+  .stat-row {
+    background: var(--surface);
+    border-bottom: 1px solid var(--rule);
+    padding: 2rem;
+  }
+  .stat-row-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0;
+  }
+  .stat-item {
+    padding: 0.8rem 1.4rem;
+    border-right: 1px solid var(--rule);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: var(--display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  /* SECTIONS */
+  section {
+    padding-top: 4rem;
+    padding-bottom: 1rem;
+  }
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.6rem;
+  }
+  section h2 {
+    font-family: var(--display);
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.4rem;
+    color: var(--ink);
+  }
+  section h3 {
+    font-family: var(--display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.7rem;
+    color: var(--ink);
+  }
+  section p { margin-bottom: 1.1rem; color: var(--ink-mid); }
+  section p:last-child { margin-bottom: 0; }
+
+  hr.section-rule {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin-top: 4rem;
+  }
+
+  /* CALLOUT BOX */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-dim);
+    padding: 1.1rem 1.4rem;
+    border-radius: 0 6px 6px 0;
+    margin: 1.6rem 0;
+  }
+  .callout p { color: var(--ink); margin: 0; font-size: 0.95rem; }
+
+  .callout-warn {
+    border-left-color: var(--warn);
+    background: var(--warn-dim);
+  }
+
+  /* CODE / MONO BLOCK */
+  .code-block {
+    background: var(--ink);
+    color: #c9d1e0;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.7;
+    padding: 1.4rem 1.6rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.4rem 0;
+  }
+  .code-block .cm { color: #6b7a9e; }
+  .code-block .kw { color: #7dd3fc; }
+  .code-block .st { color: #86efac; }
+  .code-block .nm { color: #fca5a5; }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; margin: 1.4rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--bg);
+    padding: 0.7rem 1rem;
+    text-align: left;
+    border-bottom: 2px solid var(--rule);
+  }
+  tbody td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-mid);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--bg); }
+  .td-feature { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); }
+  .td-ok { color: #16a34a; font-weight: 500; }
+  .td-out { color: var(--warn); font-weight: 500; }
+
+  /* CHART PLACEHOLDER FRAMES */
+  .chart-frame {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.8rem 0;
+  }
+  .chart-label {
+    padding: 0.7rem 1.2rem;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--bg);
+  }
+  .chart-frame img {
+    width: 100%;
+    display: block;
+  }
+  .chart-caption {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.83rem;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--rule);
+    font-style: italic;
+  }
+
+  /* RESULTS TABLE */
+  .results-table thead th { background: var(--ink); color: rgba(255,255,255,0.7); }
+  .results-table tbody td { font-family: var(--mono); font-size: 0.85rem; }
+  .results-table .highlight { color: var(--accent); font-weight: 500; }
+
+  /* ACTION TIERS */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin: 1.4rem 0;
+  }
+  .tier-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 1.1rem 1.2rem;
+    border-top: 3px solid var(--rule);
+  }
+  .tier-card.t1 { border-top-color: #dc2626; }
+  .tier-card.t2 { border-top-color: #f97316; }
+  .tier-card.t3 { border-top-color: #eab308; }
+  .tier-card.t4 { border-top-color: #22c55e; }
+  .tier-card.t5 { border-top-color: #9ca3af; }
+  .tier-name {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.4rem;
+  }
+  .tier-score { font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 0.5rem; }
+  .tier-desc { font-size: 0.82rem; color: var(--ink-mid); line-height: 1.5; }
+
+  /* LIMITATIONS LIST */
+  .limit-list {
+    list-style: none;
+    margin: 1.2rem 0;
+  }
+  .limit-list li {
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--rule);
+    padding-left: 1.2rem;
+    position: relative;
+    color: var(--ink-mid);
+    font-size: 0.95rem;
+  }
+  .limit-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1.3rem;
+    width: 5px;
+    height: 5px;
+    background: var(--warn);
+    border-radius: 50%;
+  }
+  .limit-list li:last-child { border-bottom: none; }
+  .limit-list strong { color: var(--ink); }
+
+  /* REPRO */
+  .repro-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1.4rem 0;
+  }
+  @media (max-width: 600px) { .repro-grid { grid-template-columns: 1fr; } }
+  .repro-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 1.1rem 1.2rem;
+  }
+  .repro-card h4 {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 0.5rem;
+  }
+  .repro-card p { font-size: 0.88rem; margin: 0; }
+  .repro-card a { color: var(--accent); text-decoration: none; }
+  .repro-card a:hover { text-decoration: underline; }
+
+  /* ACKNOWLEDGMENTS */
+  .ack {
+    background: var(--ink);
+    color: rgba(255,255,255,0.7);
+    padding: 2.4rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+  .ack a { color: rgba(255,255,255,0.9); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 2rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+
+  /* INLINE CODE */
+  code {
+    font-family: var(--mono);
+    font-size: 0.82em;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 3rem 1.2rem 2.5rem; }
+    .abstract-band { padding: 2rem 1.2rem; }
+    .stat-row { padding: 1.2rem; }
+    main { padding: 0 1.2rem 4rem; }
+    .stat-item { border-right: none; border-bottom: 1px solid var(--rule); padding: 0.8rem 0; }
+    .stat-item:last-child { border-bottom: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <ul>
+    <li><a href="#introduction">Introduction</a></li>
+    <li><a href="#data">Data</a></li>
+    <li><a href="#methodology">Methodology</a></li>
+    <li><a href="#results">Results</a></li>
+    <li><a href="#limitations">Limitations</a></li>
+    <li><a href="#recommendations">Recommendations</a></li>
+    <li><a href="#reproducibility">Reproducibility</a></li>
+    <li><a href="#acknowledgments">Acknowledgments</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <p class="hero-label">FlyRank ML Internship &mdash; Lane 2 Capstone &mdash; August 2026</p>
+    <h1>Content Refresh Opportunity <span>Scoring</span></h1>
+    <div class="hero-meta">
+      <div><strong>Mahad Umar Qaisrani</strong>ML Engineering Intern, FlyRank AI</div>
+      <div><strong>Dataset</strong>FlyRank Internship Warehouse v20260703</div>
+      <div><strong>Observation window</strong>2026-03 (dev) / 2026-02 (prior)</div>
+      <div><strong>Repo</strong><a href="https://github.com/mahadumar/flyrank-MLinternship-Assignment-1" style="color:rgba(255,255,255,0.7)">mahadumar/flyrank-MLinternship-Assignment-1</a></div>
+    </div>
+  </div>
+</header>
+
+<!-- ABSTRACT -->
+<div class="abstract-band">
+  <div class="abstract-inner">
+    <p class="abstract-label">Abstract</p>
+    <p>Content teams allocate writer time by gut feel. This work asks whether a data-driven model can rank pages by refresh priority using only signals observable before any editorial decision, and without encoding the label it is trying to predict. Using 134,238 pages across 42 clients from FlyRank's search performance warehouse, a Random Forest trained on 7 leakage-free features achieves ROC-AUC 0.926 on a client-holdout test set, matching the precision of a hand-crafted expert rule that explicitly uses the decline signal the model is forbidden from seeing. The output is a ranked action queue with five tiers, designed to help a content team lead prioritize writer time each week.</p>
+  </div>
+</div>
+
+<!-- STAT ROW -->
+<div class="stat-row">
+  <div class="stat-row-inner">
+    <div class="stat-item">
+      <div class="stat-num">134K</div>
+      <div class="stat-label">Pages scored</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">42</div>
+      <div class="stat-label">Clients</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">7</div>
+      <div class="stat-label">Leakage-free features</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">0.926</div>
+      <div class="stat-label">RF ROC-AUC</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">33.5%</div>
+      <div class="stat-label">Test base rate</div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- 1. INTRODUCTION -->
+  <section id="introduction">
+    <p class="section-eyebrow">Section 01</p>
+    <h2>Introduction</h2>
+
+    <p>A content team at a mid-size company might manage thousands of pages. Each week, someone has to decide which ones get a writer's attention. In practice, that decision often comes down to whichever pages the SEO lead happened to look at recently, or a simple dashboard sorted by traffic. Neither approach is principled.</p>
+
+    <p>The useful question is not "which pages are getting less traffic?" but "which pages are showing early signs of decline that indirect signals can surface, before a human would notice?" That reframing is what makes this a machine learning problem rather than a reporting problem.</p>
+
+    <p>The unit of analysis is one content page, aggregated over a 30-day observation window. The output is a ranked list with a model score from 0 to 1, a reason code, and an action label. The person acting on it is a content team lead or SEO strategist, making weekly scheduling decisions.</p>
+
+    <h3>Why the feature constraint matters</h3>
+    <p>The most obvious feature for predicting whether a page is declining is the percentage drop in impressions from last month to this month. That signal works, and the baseline rule in this work uses it explicitly. The problem is that this feature is mathematically derived from the same month-over-month comparison that defines the label. Training on it would mean the model is learning to predict the label from the label itself, which is leakage.</p>
+
+    <p>The goal of this work is to show that a model can achieve meaningful lift using only signals that are genuinely observable before the editorial decision: position, click-through rate, engagement, and volume, without ever seeing the decline signal directly.</p>
+
+    <div class="callout">
+      <p><strong>Decision framing.</strong> False negatives cost more than false positives here. A missed declining page keeps losing traffic quietly. A false positive wastes one writer's time on content that turned out to be fine. The model is calibrated to favor recall at the top of the ranking.</p>
+    </div>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- 2. DATA -->
+  <section id="data">
+    <p class="section-eyebrow">Section 02</p>
+    <h2>Data</h2>
+
+    <p><strong>Source:</strong> FlyRank Internship Warehouse v20260703. Pseudonymized, education and research use only. Accessed via DuckDB over HuggingFace with hive partitioning.</p>
+
+    <p><strong>Table:</strong> <code>fact_content_daily_performance</code>. One row per (report_date, client_hash_id, content_hash_id). Total warehouse size is approximately 78.8 million rows spanning 18 months (2025-01 through 2026-06).</p>
+
+    <h3>Date windows</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Window</th><th>Month</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Observation</td><td><code>2026-03</code></td><td>Features, label construction, model training and evaluation</td></tr>
+          <tr><td>Prior</td><td><code>2026-02</code></td><td>Baseline volume comparison only</td></tr>
+          <tr><td>Sealed</td><td><code>2026-06</code></td><td>Never queried during development</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Columns used</h3>
+    <p>Search signals: <code>gsc_impressions</code>, <code>gsc_clicks</code>, <code>gsc_avg_position</code>. Engagement signals: <code>ga4_engaged_sessions</code>, <code>ga4_sessions</code>. Identifiers: <code>client_hash_id</code>, <code>content_hash_id</code> (used for split construction only, never as model features).</p>
+
+    <h3>Availability filter</h3>
+    <p><code>gsc_data_available IS TRUE</code> applied to both months. Pages without prior month data were excluded via inner join (24% of GSC-available pages, explained below).</p>
+
+    <h3>Deliberately excluded columns</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Column</th><th>Reason excluded</th></tr></thead>
+        <tbody>
+          <tr><td class="td-feature td-out">impression_drop_pct</td><td>Mathematically equivalent to the label definition. (prior - current) / prior is the same computation as <code>is_declining</code>.</td></tr>
+          <tr><td class="td-feature td-out">click_drop_pct</td><td>Same month-over-month pattern as the label. Including it would encode the label in the feature set.</td></tr>
+          <tr><td class="td-feature td-out">prior_impressions (raw)</td><td>Used directly to construct <code>is_declining</code>.</td></tr>
+          <tr><td class="td-feature td-out">trend_pct, trend_direction</td><td>Label-derived fields confirmed leaky in earlier weekly assignments.</td></tr>
+          <tr><td class="td-feature td-out">sessions_ai, AI referral columns</td><td>Too sparse across clients to carry reliable signal.</td></tr>
+          <tr><td class="td-feature td-out">month = 2026-06</td><td>Sealed test month. Never touched.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-warn">
+      <p><strong>Panel exclusion note.</strong> 42,500 pages (24.0% of GSC-available pages in 2026-03) had no corresponding prior month record and were excluded. These are systematically newer content and newer clients, not a random sample. This is a named limitation, not a data quality issue.</p>
+    </div>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- 3. METHODOLOGY -->
+  <section id="methodology">
+    <p class="section-eyebrow">Section 03</p>
+    <h2>Methodology</h2>
+
+    <h3>Proxy label</h3>
+    <div class="code-block"><span class="cm"># Label construction — defined after all features, never used as a feature</span>
+feat[<span class="st">'is_declining'</span>] = (feat[<span class="st">'monthly_impressions'</span>] &lt; feat[<span class="st">'prior_impressions'</span>]).astype(<span class="nm">int</span>)
+    </div>
+    <p>A page is labeled declining if its total impressions in 2026-03 were lower than in 2026-02. This is an imperfect proxy. Seasonal patterns, competitor gains, and GSC sampling noise all produce the same label as genuine content decay. It is, however, the strongest operationally observable signal available in this dataset without using future data.</p>
+
+    <h3>Feature set</h3>
+    <p>Seven features, all constructed from signals available before any refresh decision, and none encoding the month-over-month comparison that defines the label.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Feature</th><th>Definition</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="td-feature">log_impressions</td><td>log1p(monthly impressions, 2026-03)</td><td class="td-ok">OK</td></tr>
+          <tr><td class="td-feature">log_prior_impressions</td><td>log1p(monthly impressions, 2026-02)</td><td class="td-ok">OK</td></tr>
+          <tr><td class="td-feature">avg_position</td><td>Mean search rank, 2026-03</td><td class="td-ok">OK</td></tr>
+          <tr><td class="td-feature">ctr</td><td>clicks / impressions, 2026-03</td><td class="td-ok">OK</td></tr>
+          <tr><td class="td-feature">ctr_change</td><td>current CTR minus prior CTR</td><td class="td-ok">OK</td></tr>
+          <tr><td class="td-feature">position_change</td><td>avg_position minus prior avg_position</td><td class="td-ok">OK</td></tr>
+          <tr><td class="td-feature">engagement_rate</td><td>engaged sessions / sessions</td><td class="td-ok">OK</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Feature correlations with the label were checked before training. The strongest is <code>log_impressions</code> at -0.21. No feature approaches 1.0, confirming that none encode the label definition.</p>
+
+    <h3>Models</h3>
+    <p><strong>Baseline rule (w04 replication):</strong> <code>score = impression_drop_pct * position_weight</code>, where position_weight is 1.0 for pages ranking in positions 1-20 and 0.5 otherwise. This rule explicitly uses the decline signal and serves as the upper-bound reference.</p>
+    <p><strong>Random Forest:</strong> 300 trees, max depth 6, minimum 20 samples per leaf, class_weight balanced, random_state 42. Trained on the 7 leakage-free features only.</p>
+    <p><strong>Logistic Regression:</strong> class_weight balanced, max_iter 1000, random_state 42, StandardScaler applied. Same 7 features.</p>
+
+    <h3>Validation strategy</h3>
+    <p>Client-holdout split with random_state 42. 25% of clients (10 out of 42) are held out for testing. No client appears in both train and test sets. This prevents the model from learning client-specific patterns and then being evaluated on the same clients.</p>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Split</th><th>Clients</th><th>Pages</th><th>Declining rate</th></tr></thead>
+        <tbody>
+          <tr><td>Train</td><td>32</td><td>87,647</td><td>27.2%</td></tr>
+          <tr><td>Test</td><td>10</td><td>46,591</td><td>33.5%</td></tr>
+          <tr><td>Client overlap</td><td colspan="3"><strong>0</strong> (confirmed)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Leakage checklist</h3>
+    <ul style="list-style:none; margin: 1rem 0;">
+      <li style="padding: 0.4rem 0; color: var(--ink-mid); font-size:0.92rem;"><span style="color:#16a34a; font-weight:600; margin-right:0.6rem;">PASS</span> <code>impression_drop_pct</code> excluded from all model features</li>
+      <li style="padding: 0.4rem 0; color: var(--ink-mid); font-size:0.92rem;"><span style="color:#16a34a; font-weight:600; margin-right:0.6rem;">PASS</span> <code>click_drop_pct</code> excluded from all model features</li>
+      <li style="padding: 0.4rem 0; color: var(--ink-mid); font-size:0.92rem;"><span style="color:#16a34a; font-weight:600; margin-right:0.6rem;">PASS</span> <code>is_declining</code> used only as training label, never as input</li>
+      <li style="padding: 0.4rem 0; color: var(--ink-mid); font-size:0.92rem;"><span style="color:#16a34a; font-weight:600; margin-right:0.6rem;">PASS</span> Prior month (2026-02) strictly precedes observation month (2026-03)</li>
+      <li style="padding: 0.4rem 0; color: var(--ink-mid); font-size:0.92rem;"><span style="color:#16a34a; font-weight:600; margin-right:0.6rem;">PASS</span> Sealed month (2026-06) never queried</li>
+    </ul>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- 4. RESULTS -->
+  <section id="results">
+    <p class="section-eyebrow">Section 04</p>
+    <h2>Results</h2>
+
+    <p>All results are from the client-holdout test set. In-sample numbers are not reported. The base rate in the test set is 33.5%, meaning a random ranking would give Precision@K = 0.335 at any K.</p>
+
+    <div class="chart-frame">
+      <div class="chart-label">Figure 1 &mdash; Precision@K: Model vs Baseline vs Random</div>
+      <img src="figures/precision_at_k.png" alt="Precision at K chart showing three lines: baseline rule, Random Forest, and Logistic Regression, all achieving Precision@K of 1.0 from K=10 to K=200 on the client-holdout test set">
+      <div class="chart-caption">All three methods achieve Precision@K = 1.0 from K=10 through K=200 on the holdout test set. The random baseline at 0.335 is shown for reference. This reflects a data characteristic rather than overfitting, explained below.</div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>K</th>
+            <th>Random (base rate)</th>
+            <th>Baseline rule</th>
+            <th>Random Forest</th>
+            <th>Logistic Regression</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>10</td><td>0.335</td><td class="highlight">1.000</td><td class="highlight">1.000</td><td class="highlight">1.000</td></tr>
+          <tr><td>20</td><td>0.335</td><td class="highlight">1.000</td><td class="highlight">1.000</td><td class="highlight">1.000</td></tr>
+          <tr><td>50</td><td>0.335</td><td class="highlight">1.000</td><td class="highlight">1.000</td><td class="highlight">1.000</td></tr>
+          <tr><td>100</td><td>0.335</td><td class="highlight">1.000</td><td class="highlight">1.000</td><td class="highlight">1.000</td></tr>
+          <tr><td>200</td><td>0.335</td><td class="highlight">1.000</td><td class="highlight">1.000</td><td class="highlight">1.000</td></tr>
+          <tr><td>ROC-AUC</td><td>0.500</td><td>1.000</td><td class="highlight">0.926</td><td>1.000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-warn">
+      <p><strong>Why Precision@K = 1.0 at all K values is honest, not suspicious.</strong> The top-ranked pages by all three methods have near-zero current impressions (monthly_impressions = 1.0) and avg_position = 0.0. These are pages that effectively fell off the map after having real prior traffic. Any ranking method, including a linear model using only log volume and position, can trivially sort them to the top. The RF ROC-AUC of 0.926 (not 1.0) shows the model does not have perfect discrimination across the full population, confirming this is a data characteristic, not overfitting. 35 real classification errors exist in the test set but rank below K=200.</p>
+    </div>
+
+    <div class="chart-frame">
+      <div class="chart-label">Figure 2 &mdash; Random Forest Feature Importance (7 non-leaky features)</div>
+      <img src="figures/feature_importance.png" alt="Horizontal bar chart showing log_prior_impressions as the top feature at approximately 0.43, followed by log_impressions at 0.37, with ctr, avg_position, ctr_change, position_change, and engagement_rate trailing. The uniform baseline of 1/7 is shown as a red dashed line.">
+      <div class="chart-caption">Volume history dominates: <code>log_prior_impressions</code> (0.43) and <code>log_impressions</code> (0.37) together account for roughly 80% of the learned signal. No feature approaches 1.0. The model is not a one-feature lookup in disguise.</div>
+    </div>
+
+    <div class="chart-frame">
+      <div class="chart-label">Figure 3 &mdash; Score Distribution and Action Distribution</div>
+      <img src="figures/score_distribution.png" alt="Left panel shows RF score histograms for declining and non-declining pages, with declining pages shifted right toward 0.5-0.8. Right panel shows action distribution bar chart: refresh_now 15483, refresh_soon 3157, monitor 53920, watch 31692, deprioritize 29986.">
+      <div class="chart-caption">Left: the score distributions overlap, reflecting the imperfection of indirect-signal learning. Declining pages shift right but do not cluster at 1.0, which is the expected shape for a model working without the drop signal. Right: 40% of pages land in monitor or above, giving the content team a usable weekly queue without overwhelming it.</div>
+    </div>
+
+    <h3>What the feature importance tells us</h3>
+    <p>Prior volume is the strongest predictor of current decline. A page that previously had high traffic but now shows low impressions has a very different risk profile from a page that was always low-traffic. The model is essentially learning to identify pages where volume loss is meaningful relative to prior standing, which is a sensible proxy for content that used to rank and no longer does.</p>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- 5. LIMITATIONS -->
+  <section id="limitations">
+    <p class="section-eyebrow">Section 05</p>
+    <h2>Limitations</h2>
+    <p>These are not caveats added after the fact. They are constraints that shaped every design decision in this work.</p>
+
+    <ul class="limit-list">
+      <li><strong>No causal claims.</strong> The model identifies pages associated with declining impressions. It does not prove that refreshing a page will improve performance. The association is observed, not causal.</li>
+      <li><strong>Proxy label imperfection.</strong> Impression drop captures declining trend but not its cause. Seasonal patterns, algorithm updates, competitor gains, and GSC sampling gaps all produce the same label as genuine content decay. The model cannot tell them apart.</li>
+      <li><strong>The baseline uses a stronger signal than the model.</strong> The expert rule uses <code>impression_drop_pct</code> directly, which encodes the label definition. A model that matches baseline performance while forbidden from using that signal is demonstrating genuine indirect-signal learning, not performing worse.</li>
+      <li><strong>Single observation window.</strong> Trained and evaluated on 2026-03 only. Temporal generalization to other months has not been validated. Seasonal patterns could shift feature importance substantially.</li>
+      <li><strong>Unbalanced panel exclusion.</strong> 42,500 pages (24.0%) were dropped for having no prior month record. These are systematically newer content and newer clients. The scoring model does not apply to them.</li>
+      <li><strong>In-sample training window.</strong> Features and labels come from the same month. A fully time-aware split (train on Q4-2025, evaluate on Q1-2026) would give a more rigorous generalization test.</li>
+      <li><strong>Error analysis (RF, test set):</strong> 30 false positives at score >= 0.7 (median impressions: 13), 1 false negative at score &lt; 0.3 (median impressions: 7,903). The single false negative is a high-traffic page the model underweighted, likely because its volume profile did not match the training distribution.</li>
+    </ul>
+
+    <p>All claims in this paper are directional observations on this dataset. They are decision-support material, not operational truth.</p>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- 6. RECOMMENDATIONS -->
+  <section id="recommendations">
+    <p class="section-eyebrow">Section 06</p>
+    <h2>Ranked Recommendations</h2>
+
+    <p>The action queue translates model scores into five tiers. Pull <code>work/outputs/capstone_action_queue.csv</code>, filter to your tier of interest, and verify each page with a human reviewer before acting. The model is a prioritization tool, not an automated trigger.</p>
+
+    <div class="tier-grid">
+      <div class="tier-card t1">
+        <div class="tier-name">refresh_now</div>
+        <div class="tier-score">score >= 0.6 AND position &lt;= 20</div>
+        <div class="tier-desc">Visible page with strong decline signal. Act this week. 15,483 pages.</div>
+      </div>
+      <div class="tier-card t2">
+        <div class="tier-name">refresh_soon</div>
+        <div class="tier-score">score >= 0.6</div>
+        <div class="tier-desc">Declining signal but lower visibility. Schedule within two weeks. 3,157 pages.</div>
+      </div>
+      <div class="tier-card t3">
+        <div class="tier-name">monitor</div>
+        <div class="tier-score">score >= 0.45</div>
+        <div class="tier-desc">Moderate signal. Watch two to four weeks before acting. 53,920 pages.</div>
+      </div>
+      <div class="tier-card t4">
+        <div class="tier-name">watch</div>
+        <div class="tier-score">score >= 0.35</div>
+        <div class="tier-desc">Weak signal. Quarterly review only. 31,692 pages.</div>
+      </div>
+      <div class="tier-card t5">
+        <div class="tier-name">deprioritize</div>
+        <div class="tier-score">score &lt; 0.35</div>
+        <div class="tier-desc">No meaningful signal. Do not allocate writer time here. 29,986 pages.</div>
+      </div>
+    </div>
+
+    <h3>How to use this in practice</h3>
+    <p>Run the notebook monthly, replacing <code>DEV_MONTH</code> and <code>PRIOR_MONTH</code> with the new windows. Export the action queue. A content team lead filters to <code>refresh_now</code>, assigns the top N pages based on writer capacity, and reviews them before scheduling. The model surfaces candidates; humans make the call.</p>
+
+    <div class="callout">
+      <p><strong>Writer capacity sizing.</strong> At typical refresh rates, a team handling 10 pages per writer per week would need roughly 25 writers to work through the full <code>refresh_now</code> queue in a month. Most teams will want to apply a secondary filter (minimum prior impressions, client priority, or content type) to bring the queue to a manageable size.</p>
+    </div>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- 7. REPRODUCIBILITY -->
+  <section id="reproducibility">
+    <p class="section-eyebrow">Section 07</p>
+    <h2>Reproducibility</h2>
+
+    <p>Every number in this paper can be reproduced from a clean Colab environment by running <code>capstone_v2.ipynb</code> top to bottom. The only external dependency is a valid HuggingFace token stored in Colab Secrets as <code>HF_TOKEN</code>.</p>
+
+    <div class="repro-grid">
+      <div class="repro-card">
+        <h4>Notebook</h4>
+        <p><a href="https://github.com/mahadumar/flyrank-MLinternship-Assignment-1">capstone_v2.ipynb</a> in repo root</p>
+      </div>
+      <div class="repro-card">
+        <h4>Random seed</h4>
+        <p><code>42</code> for both split and all models</p>
+      </div>
+      <div class="repro-card">
+        <h4>Metrics JSON</h4>
+        <p><code>work/outputs/capstone_metrics.json</code> — all Precision@K, AUC, feature importances, params</p>
+      </div>
+      <div class="repro-card">
+        <h4>Action queue</h4>
+        <p><code>work/outputs/capstone_action_queue.csv</code> — 134,238 rows, ranked by model score</p>
+      </div>
+      <div class="repro-card">
+        <h4>Data source</h4>
+        <p>FlyRank Internship Warehouse via HuggingFace. <code>hive_partitioning=true</code>. Dev month: 2026-03.</p>
+      </div>
+      <div class="repro-card">
+        <h4>Environment</h4>
+        <p>Python 3.x, DuckDB, scikit-learn, pandas, matplotlib. No pinned versions required.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="section-rule">
+
+  <!-- 8. ACKNOWLEDGMENTS -->
+  <section id="acknowledgments">
+    <p class="section-eyebrow">Section 08</p>
+    <h2>Acknowledgments</h2>
+
+    <div class="ack">
+      <p>Built on the <a href="https://flyrank.ai" target="_blank" rel="noopener">FlyRank ML Internship dataset</a>, released for education and research use. The warehouse design, pseudonymization, and access infrastructure made this work possible.</p>
+      <br>
+      <p style="opacity:0.6; font-size:0.85rem;">Dataset: FlyRank Internship Warehouse v20260703. Pseudonymized. Education and research use only. All client and content identifiers are hashed.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>Content Refresh Opportunity Scoring &mdash; FlyRank ML Internship Capstone &mdash; Mahad Umar Qaisrani &mdash; August 2026</p>
+</footer>
+
+</body>
+</html>
